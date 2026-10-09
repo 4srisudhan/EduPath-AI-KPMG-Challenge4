@@ -4,6 +4,8 @@ import {LayoutDashboard,Users,ChartNoAxesCombined,ShieldCheck,Search,ChevronRigh
 import "./styles.css";
 
 const students=[
+{name:"Meena R",dept:"AI & Data Science",year:"II",score:71,risk:"Medium",attendance:81,cgpa:7.5,lms:70,engagement:73,placement:58,skills:76,feedback:78,segment:"Placement Gap",issues:["Placement readiness"],action:"Practice aptitude and mock interviews"},
+{name:"Vijay K",dept:"Computer Science",year:"II",score:46,risk:"High",attendance:64,cgpa:6.0,lms:51,engagement:55,placement:42,skills:58,feedback:63,segment:"Intervention Required",issues:["Low attendance","Placement readiness"],action:"Create attendance recovery and placement practice plan"},
 {name:"Srisudhan S",dept:"AI & Data Science",year:"II",score:82,risk:"Low",attendance:91,cgpa:8.2,lms:76,engagement:84,placement:72,skills:86,feedback:80,segment:"High Potential",issues:["Placement readiness"],action:"Assign DSA practice + mock interview"},
 {name:"Arun Kumar",dept:"Computer Science",year:"III",score:42,risk:"High",attendance:62,cgpa:5.8,lms:48,engagement:51,placement:39,skills:54,feedback:61,segment:"Intervention Required",issues:["Low attendance","Academic performance","Placement readiness"],action:"Faculty intervention + attendance recovery plan"},
 {name:"Priya S",dept:"Information Technology",year:"III",score:64,risk:"Medium",attendance:78,cgpa:7.1,lms:69,engagement:62,placement:48,skills:72,feedback:76,segment:"Placement Gap",issues:["Placement readiness"],action:"Placement preparation pathway"},
@@ -17,12 +19,55 @@ const nav=[["overview","Overview",LayoutDashboard],["students","Students",Users]
 
 function scoreClass(r){return r==="High"?"high":r==="Medium"?"medium":"low"}
 
+function AuthScreen({onLogin}) {
+ const [mode,setMode]=useState("login");
+ const [name,setName]=useState("");
+ const [email,setEmail]=useState("");
+ const [password,setPassword]=useState("");
+ const [error,setError]=useState("");
+
+ function submit(e){
+  e.preventDefault();
+  setError("");
+  if(!email.trim() || !password.trim()){
+   setError("Please enter your email and password.");
+   return;
+  }
+  if(mode==="signup" && !name.trim()){
+   setError("Please enter your name.");
+   return;
+  }
+  onLogin(name.trim() || email.split("@")[0],email.trim());
+ }
+
+ return <div className="auth-screen">
+  <form className="auth-card" onSubmit={submit}>
+   <div className="logo auth-logo"><BrainCircuit size={27}/></div>
+   <h1>EduPath <span>AI</span></h1>
+   <p>Student Success Intelligence Platform</p>
+   <div className="auth-tabs">
+    <button type="button" className={mode==="login"?"auth-tab active":"auth-tab"} onClick={()=>{setMode("login");setError("");}}>Login</button>
+    <button type="button" className={mode==="signup"?"auth-tab active":"auth-tab"} onClick={()=>{setMode("signup");setError("");}}>Sign up</button>
+   </div>
+   {mode==="signup"&&<label>Full name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Enter your name" /></label>}
+   <label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" required /></label>
+   <label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter any demo password" required minLength={4}/></label>
+   {error&&<div className="auth-error">{error}</div>}
+   <button className="primary auth-submit" type="submit">{mode==="login"?"Login to dashboard":"Create demo account"} <ChevronRight size={17}/></button>
+   <small className="auth-note">Demo only — do not use a real password. Accounts are not securely stored.</small>
+  </form>
+ </div>;
+}
+
 function App(){
+ const [authUser,setAuthUser]=useState(null);
+ 
  const [page,setPage]=useState("overview"),[selected,setSelected]=useState(null),[query,setQuery]=useState(""),[risk,setRisk]=useState("All"),[mobile,setMobile]=useState(false);
  const filtered=useMemo(()=>students.filter(s=>(risk==="All"||s.risk===risk)&&(`${s.name} ${s.dept}`.toLowerCase().includes(query.toLowerCase()))),[query,risk]);
  const current=selected?students.find(s=>s.name===selected):null;
+ if(!authUser) return <AuthScreen onLogin={(name,email)=>setAuthUser({name,email})}/>;
  return <div className="app">
-  <header className="topbar"><div className="brand"><div className="logo"><BrainCircuit size={23}/></div><div><b>EduPath <span>AI</span></b><small>Student Success Intelligence</small></div></div><button className="mobile-btn" onClick={()=>setMobile(!mobile)}>{mobile?<X/>:<Menu/>}</button><div className="top-actions"><div className="live"><i/>Live analytics</div><div className="avatar">SS</div></div></header>
+  <header className="topbar"><div className="brand"><div className="logo"><BrainCircuit size={23}/></div><div><b>EduPath <span>AI</span></b><small>Student Success Intelligence</small></div></div><button className="mobile-btn" onClick={()=>setMobile(!mobile)}>{mobile?<X/>:<Menu/>}</button><div className="top-actions"><div className="live"><i/>Live analytics</div><button className="logout-btn" onClick={()=>setAuthUser(null)}>Logout</button><div className="avatar">{authUser.name.split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase()}</div></div></header>
   <aside className={mobile?"sidebar open":"sidebar"}><div className="side-label">WORKSPACE</div>{nav.map(([id,label,Icon])=><button className={page===id?"nav active":"nav"} onClick={()=>{setPage(id);setSelected(null);setMobile(false)}} key={id}><Icon size={18}/>{label}</button>)}<div className="side-label gap">DATA</div><button className="nav" onClick={()=>alert("Demo CSV import: connect your college data source in the next version.")}><Upload size={18}/>Import data</button><div className="side-card"><div className="side-icon"><ShieldCheck size={18}/></div><b>Decision ready</b><p>Scores are explainable and every risk flag has recommended action.</p></div></aside>
   <main className="main">
    {page==="overview"&&<Overview setPage={setPage} setSelected={setSelected}/>}
@@ -138,3 +183,6 @@ function StudentDrawer({student:s,close}){
 }
 
 createRoot(document.getElementById("root")).render(<App/>);
+
+
+
